@@ -37,8 +37,7 @@ import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-public class TestMBean
-{
+public class TestMBean {
    @Test
    public void testMBeanRegistration() {
       HikariConfig config = newHikariConfig();
@@ -70,9 +69,11 @@ public class TestMBean
 
          TimeUnit.SECONDS.sleep(1);
 
-         MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
-         ObjectName poolName = new ObjectName("com.zaxxer.hikari:type=Pool (testMBeanReporting)");
-         HikariPoolMXBean hikariPoolMXBean = JMX.newMXBeanProxy(mBeanServer, poolName, HikariPoolMXBean.class);
+         MBeanServer      mBeanServer      = ManagementFactory.getPlatformMBeanServer();
+         ObjectName       poolName         =
+            new ObjectName("com.zaxxer.hikari:type=Pool (testMBeanReporting)");
+         HikariPoolMXBean hikariPoolMXBean =
+            JMX.newMXBeanProxy(mBeanServer, poolName, HikariPoolMXBean.class);
 
          assertEquals(0, hikariPoolMXBean.getActiveConnections());
          assertEquals(3, hikariPoolMXBean.getIdleConnections());
@@ -92,8 +93,7 @@ public class TestMBean
          assertEquals(3, hikariPoolMXBean.getIdleConnections());
          assertEquals(3, hikariPoolMXBean.getTotalConnections());
 
-      }
-      finally {
+      } finally {
          System.clearProperty("com.zaxxer.hikari.housekeeping.periodMs");
       }
    }
@@ -140,17 +140,14 @@ public class TestMBean
 
          quietlySleep(500);
 
-         try (Connection conn1 = ds.getConnection();
-              Connection conn2 = ds.getConnection()) {
+         try (Connection conn1 = ds.getConnection(); Connection conn2 = ds.getConnection()) {
             fail("Connection should have timed out.");
             conn1.close();
             conn2.close();
-         }
-         catch (SQLException e) {
+         } catch (SQLException e) {
             assertEquals(1000, ds.getConnectionTimeout());
          }
-      }
-      finally {
+      } finally {
          System.clearProperty("com.zaxxer.hikari.housekeeping.periodMs");
       }
    }

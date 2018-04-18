@@ -33,34 +33,28 @@ import static com.zaxxer.hikari.util.ClockSource.*;
  *
  * @author Brett Wooldridge
  */
-final class PoolEntry implements IConcurrentBagEntry
-{
-   private static final Logger LOGGER = LoggerFactory.getLogger(PoolEntry.class);
+final class PoolEntry implements IConcurrentBagEntry {
+   private static final Logger                               LOGGER =
+      LoggerFactory.getLogger(PoolEntry.class);
    private static final AtomicIntegerFieldUpdater<PoolEntry> stateUpdater;
 
-   Connection connection;
-   long lastAccessed;
-   long lastBorrowed;
-
-   @SuppressWarnings("FieldCanBeLocal")
-   private volatile int state = 0;
-   private volatile boolean evict;
-
-   private volatile ScheduledFuture<?> endOfLife;
-
-   private final FastList<Statement> openStatements;
-   private final HikariPool hikariPool;
-
-   private final boolean isReadOnly;
-   private final boolean isAutoCommit;
-
-   static
-   {
+   static {
       stateUpdater = AtomicIntegerFieldUpdater.newUpdater(PoolEntry.class, "state");
    }
 
-   PoolEntry(final Connection connection, final PoolBase pool, final boolean isReadOnly, final boolean isAutoCommit)
-   {
+   private final FastList<Statement> openStatements;
+   private final HikariPool          hikariPool;
+   private final boolean isReadOnly;
+   private final boolean isAutoCommit;
+   Connection connection;
+   long       lastAccessed;
+   long       lastBorrowed;
+   @SuppressWarnings("FieldCanBeLocal")
+   private volatile int     state = 0;
+   private volatile boolean evict;
+   private volatile ScheduledFuture<?> endOfLife;
+
+   PoolEntry(final Connection connection, final PoolBase pool, final boolean isReadOnly, final boolean isAutoCommit) {
       this.connection = connection;
       this.hikariPool = (HikariPool) pool;
       this.isReadOnly = isReadOnly;
@@ -74,8 +68,7 @@ final class PoolEntry implements IConcurrentBagEntry
     *
     * @param lastAccessed last access time-stamp
     */
-   void recycle(final long lastAccessed)
-   {
+   void recycle(final long lastAccessed) {
       if (connection != null) {
          this.lastAccessed = lastAccessed;
          hikariPool.recycle(this);
@@ -87,87 +80,87 @@ final class PoolEntry implements IConcurrentBagEntry
     *
     * @param endOfLife this PoolEntry/Connection's end of life {@link ScheduledFuture}
     */
-   void setFutureEol(final ScheduledFuture<?> endOfLife)
-   {
+   void setFutureEol(final ScheduledFuture<?> endOfLife) {
       this.endOfLife = endOfLife;
    }
 
-   Connection createProxyConnection(final ProxyLeakTask leakTask, final long now)
-   {
-      return ProxyFactory.getProxyConnection(this, connection, openStatements, leakTask, now, isReadOnly, isAutoCommit);
+   Connection createProxyConnection(final ProxyLeakTask leakTask, final long now) {
+      return ProxyFactory
+         .getProxyConnection(this, connection, openStatements, leakTask, now, isReadOnly,
+                             isAutoCommit);
    }
 
-   void resetConnectionState(final ProxyConnection proxyConnection, final int dirtyBits) throws SQLException
-   {
+   void resetConnectionState(final ProxyConnection proxyConnection, final int dirtyBits) throws SQLException {
       hikariPool.resetConnectionState(connection, proxyConnection, dirtyBits);
    }
 
-   String getPoolName()
-   {
+   String getPoolName() {
       return hikariPool.toString();
    }
 
-   boolean isMarkedEvicted()
-   {
+   boolean isMarkedEvicted() {
       return evict;
    }
 
-   void markEvicted()
-   {
+   void markEvicted() {
       this.evict = true;
    }
 
-   void evict(final String closureReason)
-   {
+   void evict(final String closureReason) {
       hikariPool.closeConnection(this, closureReason);
    }
 
-   /** Returns millis since lastBorrowed */
-   long getMillisSinceBorrowed()
-   {
+   /**
+    * Returns millis since lastBorrowed
+    */
+   long getMillisSinceBorrowed() {
       return elapsedMillis(lastBorrowed);
    }
 
-   /** {@inheritDoc} */
+   /**
+    * {@inheritDoc}
+    */
    @Override
-   public String toString()
-   {
+   public String toString() {
       final long now = currentTime();
-      return connection
-         + ", accessed " + elapsedDisplayString(lastAccessed, now) + " ago, "
-         + stateToString();
+      return connection + ", accessed " + elapsedDisplayString(lastAccessed, now) + " ago, " +
+             stateToString();
    }
 
    // ***********************************************************************
    //                      IConcurrentBagEntry methods
    // ***********************************************************************
 
-   /** {@inheritDoc} */
+   /**
+    * {@inheritDoc}
+    */
    @Override
-   public int getState()
-   {
+   public int getState() {
       return stateUpdater.get(this);
    }
 
-   /** {@inheritDoc} */
+   /**
+    * {@inheritDoc}
+    */
    @Override
-   public boolean compareAndSet(int expect, int update)
-   {
-      return stateUpdater.compareAndSet(this, expect, update);
-   }
-
-   /** {@inheritDoc} */
-   @Override
-   public void setState(int update)
-   {
+   public void setState(int update) {
       stateUpdater.set(this, update);
    }
 
-   Connection close()
-   {
+   /**
+    * {@inheritDoc}
+    */
+   @Override
+   public boolean compareAndSet(int expect, int update) {
+      return stateUpdater.compareAndSet(this, expect, update);
+   }
+
+   Connection close() {
       ScheduledFuture<?> eol = endOfLife;
       if (eol != null && !eol.isDone() && !eol.cancel(false)) {
-         LOGGER.warn("{} - maxLifeTime expiration task cancellation unexpectedly returned false for connection {}", getPoolName(), connection);
+         LOGGER.warn(
+            "{} - maxLifeTime expiration task cancellation unexpectedly returned false for connection {}",
+            getPoolName(), connection);
       }
 
       Connection con = connection;
@@ -176,19 +169,18 @@ final class PoolEntry implements IConcurrentBagEntry
       return con;
    }
 
-   private String stateToString()
-   {
+   private String stateToString() {
       switch (state) {
-      case STATE_IN_USE:
-         return "IN_USE";
-      case STATE_NOT_IN_USE:
-         return "NOT_IN_USE";
-      case STATE_REMOVED:
-         return "REMOVED";
-      case STATE_RESERVED:
-         return "RESERVED";
-      default:
-         return "Invalid";
+         case STATE_IN_USE:
+            return "IN_USE";
+         case STATE_NOT_IN_USE:
+            return "NOT_IN_USE";
+         case STATE_REMOVED:
+            return "REMOVED";
+         case STATE_RESERVED:
+            return "RESERVED";
+         default:
+            return "Invalid";
       }
    }
 }

@@ -18,13 +18,11 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author wvuong@chariotsolutions.com on 2/16/17.
  */
-public class MetricsTrackerTest
-{
+public class MetricsTrackerTest {
 
    @Test(expected = SQLTransientConnectionException.class)
-   public void connectionTimeoutIsRecorded() throws Exception
-   {
-      int timeoutMillis = 1000;
+   public void connectionTimeoutIsRecorded() throws Exception {
+      int timeoutMillis                   = 1000;
       int timeToCreateNewConnectionMillis = timeoutMillis * 2;
 
       StubDataSource stubDataSource = new StubDataSource();
@@ -40,46 +38,43 @@ public class MetricsTrackerTest
          ds.setMetricsTrackerFactory((poolName, poolStats) -> metricsTracker);
 
          try (Connection c = ds.getConnection()) {
-            fail("Connection shouldn't have been successfully created due to configured connection timeout");
+            fail(
+               "Connection shouldn't have been successfully created due to configured connection timeout");
 
          } finally {
             // assert that connection timeout was measured
             assertThat(metricsTracker.connectionTimeoutRecorded, is(true));
             // assert that measured time to acquire connection should be roughly equal or greater than the configured connection timeout time
-            assertTrue(metricsTracker.connectionAcquiredNanos >= TimeUnit.NANOSECONDS.convert(timeoutMillis, TimeUnit.MILLISECONDS));
+            assertTrue(metricsTracker.connectionAcquiredNanos >=
+                       TimeUnit.NANOSECONDS.convert(timeoutMillis, TimeUnit.MILLISECONDS));
          }
       }
    }
 
-   private static class StubMetricsTracker implements IMetricsTracker
-   {
+   private static class StubMetricsTracker implements IMetricsTracker {
 
-      private Long connectionCreatedMillis;
-      private Long connectionAcquiredNanos;
-      private Long connectionBorrowedMillis;
+      private Long    connectionCreatedMillis;
+      private Long    connectionAcquiredNanos;
+      private Long    connectionBorrowedMillis;
       private boolean connectionTimeoutRecorded;
 
       @Override
-      public void recordConnectionCreatedMillis(long connectionCreatedMillis)
-      {
+      public void recordConnectionCreatedMillis(long connectionCreatedMillis) {
          this.connectionCreatedMillis = connectionCreatedMillis;
       }
 
       @Override
-      public void recordConnectionAcquiredNanos(long elapsedAcquiredNanos)
-      {
+      public void recordConnectionAcquiredNanos(long elapsedAcquiredNanos) {
          this.connectionAcquiredNanos = elapsedAcquiredNanos;
       }
 
       @Override
-      public void recordConnectionUsageMillis(long elapsedBorrowedMillis)
-      {
+      public void recordConnectionUsageMillis(long elapsedBorrowedMillis) {
          this.connectionBorrowedMillis = elapsedBorrowedMillis;
       }
 
       @Override
-      public void recordConnectionTimeout()
-      {
+      public void recordConnectionTimeout() {
          this.connectionTimeoutRecorded = true;
       }
    }

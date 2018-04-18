@@ -39,18 +39,18 @@ import static org.ops4j.pax.exam.CoreOptions.*;
  * @author lburgazzoli
  */
 @RunWith(OSGiBundleTest.ConditionalPaxExam.class)
-public class OSGiBundleTest
-{
+public class OSGiBundleTest {
+   @Inject
+   BundleContext context;
+
    @Test
-   public void checkInject()
-   {
+   public void checkInject() {
       assertNotNull(context);
    }
 
    @Test
-   public void checkBundle()
-   {
-      Boolean bundleFound = false;
+   public void checkBundle() {
+      Boolean bundleFound  = false;
       Boolean bundleActive = false;
 
       Bundle[] bundles = context.getBundles();
@@ -69,27 +69,17 @@ public class OSGiBundleTest
       assertTrue(bundleActive);
    }
 
-   @Inject
-   BundleContext context;
-
    @Configuration
-   public Option[] config()
-   {
-      return options(
-         systemProperty("org.osgi.framework.storage.clean").value("true"),
-         systemProperty("org.ops4j.pax.logging.DefaultServiceLog.level").value("WARN"),
-         mavenBundle("org.slf4j", "slf4j-api", "1.7.5"),
-         mavenBundle("org.slf4j", "slf4j-simple", "1.7.5").noStart(),
-         new File("target/classes").exists()
-            ? bundle("reference:file:target/classes")
-            : bundle("reference:file:../target/classes"),
-         junitBundles(),
-         cleanCaches()
-      );
+   public Option[] config() {
+      return options(systemProperty("org.osgi.framework.storage.clean").value("true"),
+                     systemProperty("org.ops4j.pax.logging.DefaultServiceLog.level").value("WARN"),
+                     mavenBundle("org.slf4j", "slf4j-api", "1.7.5"),
+                     mavenBundle("org.slf4j", "slf4j-simple", "1.7.5").noStart(),
+                     new File("target/classes").exists() ? bundle("reference:file:target/classes") :
+                     bundle("reference:file:../target/classes"), junitBundles(), cleanCaches());
    }
 
-   public static class ConditionalPaxExam extends PaxExam
-   {
+   public static class ConditionalPaxExam extends PaxExam {
       public ConditionalPaxExam(Class<?> klass) throws InitializationError {
          super(klass);
       }

@@ -16,147 +16,133 @@
 
 package com.zaxxer.hikari.mocks;
 
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import java.io.PrintWriter;
-import java.sql.CallableStatement;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
-import java.sql.Statement;
-import java.util.logging.Logger;
-
-import javax.sql.DataSource;
-
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
+import javax.sql.DataSource;
+import java.io.PrintWriter;
+import java.sql.*;
+import java.util.logging.Logger;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.*;
+
 /**
- *
  * @author Brett Wooldridge
  */
-public class MockDataSource implements DataSource
-{
-    @Override
-    public Connection getConnection() throws SQLException
-    {
-        return createMockConnection();
-    }
+public class MockDataSource implements DataSource {
+   public static Connection createMockConnection() throws SQLException {
+      // Setup mock connection
+      final Connection mockConnection = mock(Connection.class);
 
-    @Override
-    public Connection getConnection(String username, String password) throws SQLException
-    {
-        return getConnection();
-    }
+      // Autocommit is always true by default
+      when(mockConnection.getAutoCommit()).thenReturn(true);
 
-    @Override
-    public PrintWriter getLogWriter() throws SQLException
-    {
-        return null;
-    }
+      // Handle Connection.createStatement()
+      Statement statement = mock(Statement.class);
+      when(mockConnection.createStatement()).thenReturn(statement);
+      when(mockConnection.createStatement(anyInt(), anyInt())).thenReturn(statement);
+      when(mockConnection.createStatement(anyInt(), anyInt(), anyInt())).thenReturn(statement);
+      when(mockConnection.isValid(anyInt())).thenReturn(true);
 
-    @Override
-    public void setLogWriter(PrintWriter out) throws SQLException
-    {
-    }
+      // Handle Connection.prepareStatement()
+      PreparedStatement mockPreparedStatement = mock(PreparedStatement.class);
+      when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
+      when(mockConnection.prepareStatement(anyString(), anyInt()))
+         .thenReturn(mockPreparedStatement);
+      when(mockConnection.prepareStatement(anyString(), any(int[].class)))
+         .thenReturn(mockPreparedStatement);
+      when(mockConnection.prepareStatement(anyString(), any(String[].class)))
+         .thenReturn(mockPreparedStatement);
+      when(mockConnection.prepareStatement(anyString(), anyInt(), anyInt()))
+         .thenReturn(mockPreparedStatement);
+      when(mockConnection.prepareStatement(anyString(), anyInt(), anyInt(), anyInt()))
+         .thenReturn(mockPreparedStatement);
+      doAnswer(new Answer<Void>() {
+         @Override
+         public Void answer(InvocationOnMock invocation) throws Throwable {
+            return null;
+         }
+      }).doNothing().when(mockPreparedStatement).setInt(anyInt(), anyInt());
 
-    @Override
-    public void setLoginTimeout(int seconds) throws SQLException
-    {
-    }
+      ResultSet mockResultSet = mock(ResultSet.class);
+      when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
+      when(mockResultSet.getString(anyInt())).thenReturn("aString");
+      when(mockResultSet.next()).thenReturn(true);
 
-    @Override
-    public int getLoginTimeout() throws SQLException
-    {
-        return 0;
-    }
+      // Handle Connection.prepareCall()
+      CallableStatement mockCallableStatement = mock(CallableStatement.class);
+      when(mockConnection.prepareCall(anyString())).thenReturn(mockCallableStatement);
+      when(mockConnection.prepareCall(anyString(), anyInt(), anyInt()))
+         .thenReturn(mockCallableStatement);
+      when(mockConnection.prepareCall(anyString(), anyInt(), anyInt(), anyInt()))
+         .thenReturn(mockCallableStatement);
 
-    public Logger getParentLogger() throws SQLFeatureNotSupportedException
-    {
-        return null;
-    }
+      // Handle Connection.close()
+      //        doAnswer(new Answer<Void>() {
+      //            public Void answer(InvocationOnMock invocation) throws Throwable {
+      //                return null;
+      //            }
+      //        }).doThrow(new SQLException("Connection is already closed")).when(mockConnection).close();
 
-    @Override
-    public <T> T unwrap(Class<T> iface) throws SQLException
-    {
-        return null;
-    }
+      // Handle Connection.commit()
+      //        doAnswer(new Answer<Void>() {
+      //            public Void answer(InvocationOnMock invocation) throws Throwable {
+      //                return null;
+      //            }
+      //        }).doThrow(new SQLException("Transaction already commited")).when(mockConnection).commit();
 
-    @Override
-    public boolean isWrapperFor(Class<?> iface) throws SQLException
-    {
-        return false;
-    }
+      // Handle Connection.rollback()
+      //        doAnswer(new Answer<Void>() {
+      //            public Void answer(InvocationOnMock invocation) throws Throwable {
+      //                return null;
+      //            }
+      //        }).doThrow(new SQLException("Transaction already rolledback")).when(mockConnection).rollback();
 
-    public static Connection createMockConnection() throws SQLException {
-        // Setup mock connection
-        final Connection mockConnection = mock(Connection.class);
+      return mockConnection;
+   }
 
-        // Autocommit is always true by default
-        when(mockConnection.getAutoCommit()).thenReturn(true);
+   @Override
+   public Connection getConnection() throws SQLException {
+      return createMockConnection();
+   }
 
-        // Handle Connection.createStatement()
-        Statement statement = mock(Statement.class);
-        when(mockConnection.createStatement()).thenReturn(statement);
-        when(mockConnection.createStatement(anyInt(), anyInt())).thenReturn(statement);
-        when(mockConnection.createStatement(anyInt(), anyInt(), anyInt())).thenReturn(statement);
-        when(mockConnection.isValid(anyInt())).thenReturn(true);
+   @Override
+   public Connection getConnection(String username, String password) throws SQLException {
+      return getConnection();
+   }
 
-        // Handle Connection.prepareStatement()
-        PreparedStatement mockPreparedStatement = mock(PreparedStatement.class);
-        when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
-        when(mockConnection.prepareStatement(anyString(), anyInt())).thenReturn(mockPreparedStatement);
-        when(mockConnection.prepareStatement(anyString(), any(int[].class))).thenReturn(mockPreparedStatement);
-        when(mockConnection.prepareStatement(anyString(), any(String[].class))).thenReturn(mockPreparedStatement);
-        when(mockConnection.prepareStatement(anyString(), anyInt(), anyInt())).thenReturn(mockPreparedStatement);
-        when(mockConnection.prepareStatement(anyString(), anyInt(), anyInt(), anyInt())).thenReturn(mockPreparedStatement);
-        doAnswer(new Answer<Void>() {
-            @Override
-            public Void answer(InvocationOnMock invocation) throws Throwable
-            {
-                return null;
-            }
-        }).doNothing().when(mockPreparedStatement).setInt(anyInt(), anyInt());
+   @Override
+   public PrintWriter getLogWriter() throws SQLException {
+      return null;
+   }
 
-        ResultSet mockResultSet = mock(ResultSet.class);
-        when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
-        when(mockResultSet.getString(anyInt())).thenReturn("aString");
-        when(mockResultSet.next()).thenReturn(true);
+   @Override
+   public void setLogWriter(PrintWriter out) throws SQLException {
+   }
 
-        // Handle Connection.prepareCall()
-        CallableStatement mockCallableStatement = mock(CallableStatement.class);
-        when(mockConnection.prepareCall(anyString())).thenReturn(mockCallableStatement);
-        when(mockConnection.prepareCall(anyString(), anyInt(), anyInt())).thenReturn(mockCallableStatement);
-        when(mockConnection.prepareCall(anyString(), anyInt(), anyInt(), anyInt())).thenReturn(mockCallableStatement);
+   @Override
+   public int getLoginTimeout() throws SQLException {
+      return 0;
+   }
 
-        // Handle Connection.close()
-//        doAnswer(new Answer<Void>() {
-//            public Void answer(InvocationOnMock invocation) throws Throwable {
-//                return null;
-//            }
-//        }).doThrow(new SQLException("Connection is already closed")).when(mockConnection).close();
+   @Override
+   public void setLoginTimeout(int seconds) throws SQLException {
+   }
 
-        // Handle Connection.commit()
-//        doAnswer(new Answer<Void>() {
-//            public Void answer(InvocationOnMock invocation) throws Throwable {
-//                return null;
-//            }
-//        }).doThrow(new SQLException("Transaction already commited")).when(mockConnection).commit();
+   public Logger getParentLogger() throws SQLFeatureNotSupportedException {
+      return null;
+   }
 
-        // Handle Connection.rollback()
-//        doAnswer(new Answer<Void>() {
-//            public Void answer(InvocationOnMock invocation) throws Throwable {
-//                return null;
-//            }
-//        }).doThrow(new SQLException("Transaction already rolledback")).when(mockConnection).rollback();
+   @Override
+   public <T> T unwrap(Class<T> iface) throws SQLException {
+      return null;
+   }
 
-        return mockConnection;
-    }
+   @Override
+   public boolean isWrapperFor(Class<?> iface) throws SQLException {
+      return false;
+   }
 }

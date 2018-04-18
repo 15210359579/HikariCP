@@ -12,7 +12,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package com.zaxxer.hikari.metrics.prometheus;
 
@@ -31,11 +31,10 @@ import static org.junit.Assert.assertThat;
 
 public class PrometheusMetricsTrackerTest {
 
-   private CollectorRegistry collectorRegistry = CollectorRegistry.defaultRegistry;
-
-   private static final String POOL_LABEL_NAME = "pool";
-   private static final String QUANTILE_LABEL_NAME = "quantile";
+   private static final String   POOL_LABEL_NAME       = "pool";
+   private static final String   QUANTILE_LABEL_NAME   = "quantile";
    private static final String[] QUANTILE_LABEL_VALUES = new String[]{"0.5", "0.95", "0.99"};
+   private CollectorRegistry collectorRegistry = CollectorRegistry.defaultRegistry;
 
    @Test
    public void recordConnectionTimeout() throws Exception {
@@ -45,7 +44,7 @@ public class PrometheusMetricsTrackerTest {
       config.setMaximumPoolSize(2);
       config.setConnectionTimeout(250);
 
-      String[] labelNames = {POOL_LABEL_NAME};
+      String[] labelNames  = {POOL_LABEL_NAME};
       String[] labelValues = {config.getPoolName()};
 
       try (HikariDataSource hikariDataSource = new HikariDataSource(config)) {
@@ -56,11 +55,8 @@ public class PrometheusMetricsTrackerTest {
             }
          }
 
-         Double total = collectorRegistry.getSampleValue(
-            "hikaricp_connection_timeout_total",
-            labelNames,
-            labelValues
-         );
+         Double total = collectorRegistry
+            .getSampleValue("hikaricp_connection_timeout_total", labelNames, labelValues);
          assertThat(total, is(1.0));
       }
    }
@@ -93,10 +89,9 @@ public class PrometheusMetricsTrackerTest {
       String[] labelValues1 = {config.getPoolName()};
 
       try (HikariDataSource ignored = new HikariDataSource(config)) {
-         assertThat(collectorRegistry.getSampleValue(
-            "hikaricp_connection_timeout_total",
-            labelNames,
-            labelValues1), is(0.0));
+         assertThat(collectorRegistry
+                       .getSampleValue("hikaricp_connection_timeout_total", labelNames,
+                                       labelValues1), is(0.0));
 
          HikariConfig config2 = newHikariConfig();
          config2.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory());
@@ -107,10 +102,9 @@ public class PrometheusMetricsTrackerTest {
          String[] labelValues2 = {config2.getPoolName()};
 
          try (HikariDataSource ignored2 = new HikariDataSource(config2)) {
-            assertThat(collectorRegistry.getSampleValue(
-               "hikaricp_connection_timeout_total",
-               labelNames,
-               labelValues2), is(0.0));
+            assertThat(collectorRegistry
+                          .getSampleValue("hikaricp_connection_timeout_total", labelNames,
+                                          labelValues2), is(0.0));
          }
       }
    }
@@ -121,26 +115,20 @@ public class PrometheusMetricsTrackerTest {
       config.setJdbcUrl("jdbc:h2:mem:");
 
       try (HikariDataSource ignored = new HikariDataSource(config)) {
-         Double count = collectorRegistry.getSampleValue(
-            metricName + "_count",
-            new String[]{POOL_LABEL_NAME},
-            new String[]{config.getPoolName()}
-         );
+         Double count = collectorRegistry
+            .getSampleValue(metricName + "_count", new String[]{POOL_LABEL_NAME},
+                            new String[]{config.getPoolName()});
          assertNotNull(count);
 
-         Double sum = collectorRegistry.getSampleValue(
-            metricName + "_sum",
-            new String[]{POOL_LABEL_NAME},
-            new String[]{config.getPoolName()}
-         );
+         Double sum = collectorRegistry
+            .getSampleValue(metricName + "_sum", new String[]{POOL_LABEL_NAME},
+                            new String[]{config.getPoolName()});
          assertNotNull(sum);
 
          for (String quantileLabelValue : QUANTILE_LABEL_VALUES) {
-            Double quantileValue = collectorRegistry.getSampleValue(
-               metricName,
-               new String[]{POOL_LABEL_NAME, QUANTILE_LABEL_NAME},
-               new String[]{config.getPoolName(), quantileLabelValue}
-            );
+            Double quantileValue = collectorRegistry
+               .getSampleValue(metricName, new String[]{POOL_LABEL_NAME, QUANTILE_LABEL_NAME},
+                               new String[]{config.getPoolName(), quantileLabelValue});
             assertNotNull("q = " + quantileLabelValue, quantileValue);
          }
       }

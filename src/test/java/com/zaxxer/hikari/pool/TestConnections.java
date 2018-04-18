@@ -39,27 +39,23 @@ import static org.junit.Assert.*;
 /**
  * @author Brett Wooldridge
  */
-public class TestConnections
-{
+public class TestConnections {
    @Before
-   public void before()
-   {
+   public void before() {
       setSlf4jTargetStream(HikariPool.class, System.err);
       setSlf4jLogLevel(HikariPool.class, Level.DEBUG);
       setSlf4jLogLevel(PoolBase.class, Level.DEBUG);
    }
 
    @After
-   public void after()
-   {
+   public void after() {
       System.getProperties().remove("com.zaxxer.hikari.housekeeping.periodMs");
       setSlf4jLogLevel(HikariPool.class, Level.WARN);
       setSlf4jLogLevel(PoolBase.class, Level.WARN);
    }
 
    @Test
-   public void testCreate() throws SQLException
-   {
+   public void testCreate() throws SQLException {
       HikariConfig config = newHikariConfig();
       config.setMinimumIdle(1);
       config.setMaximumPoolSize(1);
@@ -79,8 +75,8 @@ public class TestConnections
          assertSame("Total connections not as expected", 1, pool.getTotalConnections());
          assertSame("Idle connections not as expected", 1, pool.getIdleConnections());
 
-         try (Connection connection = ds.getConnection();
-              PreparedStatement statement = connection.prepareStatement("SELECT * FROM device WHERE device_id=?")) {
+         try (Connection connection = ds.getConnection(); PreparedStatement statement = connection
+            .prepareStatement("SELECT * FROM device WHERE device_id=?")) {
 
             assertNotNull(connection);
             assertNotNull(statement);
@@ -103,8 +99,7 @@ public class TestConnections
    }
 
    @Test
-   public void testMaxLifetime() throws Exception
-   {
+   public void testMaxLifetime() throws Exception {
       HikariConfig config = newHikariConfig();
       config.setMinimumIdle(0);
       config.setMaximumPoolSize(1);
@@ -154,15 +149,13 @@ public class TestConnections
 
          assertSame("Post total connections not as expected", 1, pool.getTotalConnections());
          assertSame("Post idle connections not as expected", 1, pool.getIdleConnections());
-      }
-      finally {
+      } finally {
          setConfigUnitTest(false);
       }
    }
 
    @Test
-   public void testMaxLifetime2() throws Exception
-   {
+   public void testMaxLifetime2() throws Exception {
       HikariConfig config = newHikariConfig();
       config.setMinimumIdle(0);
       config.setMaximumPoolSize(1);
@@ -208,15 +201,13 @@ public class TestConnections
 
          assertSame("Post total connections not as expected", 1, pool.getTotalConnections());
          assertSame("Post idle connections not as expected", 1, pool.getIdleConnections());
-      }
-      finally {
+      } finally {
          setConfigUnitTest(false);
       }
    }
 
    @Test
-   public void testDoubleClose() throws Exception
-   {
+   public void testDoubleClose() throws Exception {
       HikariConfig config = newHikariConfig();
       config.setMinimumIdle(1);
       config.setMaximumPoolSize(1);
@@ -225,7 +216,7 @@ public class TestConnections
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
       try (HikariDataSource ds = new HikariDataSource(config);
-         Connection connection = ds.getConnection()) {
+           Connection connection = ds.getConnection()) {
          connection.close();
 
          // should no-op
@@ -233,13 +224,13 @@ public class TestConnections
 
          assertTrue("Connection should have closed", connection.isClosed());
          assertFalse("Connection should have closed", connection.isValid(5));
-         assertTrue("Expected to contain ClosedConnection, but was " + connection, connection.toString().contains("ClosedConnection"));
+         assertTrue("Expected to contain ClosedConnection, but was " + connection,
+                    connection.toString().contains("ClosedConnection"));
       }
    }
 
    @Test
-   public void testEviction() throws Exception
-   {
+   public void testEviction() throws Exception {
       HikariConfig config = newHikariConfig();
       config.setMinimumIdle(0);
       config.setMaximumPoolSize(5);
@@ -258,8 +249,7 @@ public class TestConnections
    }
 
    @Test
-   public void testBackfill() throws Exception
-   {
+   public void testBackfill() throws Exception {
       HikariConfig config = newHikariConfig();
       config.setMinimumIdle(1);
       config.setMaximumPoolSize(4);
@@ -284,7 +274,8 @@ public class TestConnections
             assertSame("Total connections not as expected", 1, pool.getTotalConnections());
             assertSame("Idle connections not as expected", 0, pool.getIdleConnections());
 
-            PreparedStatement statement = connection.prepareStatement("SELECT some, thing FROM somewhere WHERE something=?");
+            PreparedStatement statement =
+               connection.prepareStatement("SELECT some, thing FROM somewhere WHERE something=?");
             assertNotNull(statement);
 
             ResultSet resultSet = statement.executeQuery();
@@ -293,8 +284,7 @@ public class TestConnections
             try {
                statement.getMaxFieldSize();
                fail();
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                assertSame(SQLException.class, e.getClass());
             }
 
@@ -311,15 +301,13 @@ public class TestConnections
 
          assertSame("Total connections not as expected", 1, pool.getTotalConnections());
          assertSame("Idle connections not as expected", 1, pool.getIdleConnections());
-      }
-      finally {
+      } finally {
          StubConnection.slowCreate = false;
       }
    }
 
    @Test
-   public void testMaximumPoolLimit() throws Exception
-   {
+   public void testMaximumPoolLimit() throws Exception {
       HikariConfig config = newHikariConfig();
       config.setMinimumIdle(1);
       config.setMaximumPoolSize(4);
@@ -345,8 +333,7 @@ public class TestConnections
                      pool.logPoolState("After  acquire ");
                      quietlySleep(500);
                   }
-               }
-               catch (Exception e) {
+               } catch (Exception e) {
                   ref.set(e);
                }
             });
@@ -368,8 +355,7 @@ public class TestConnections
 
    @Test
    @SuppressWarnings("EmptyTryBlock")
-   public void testOldDriver() throws Exception
-   {
+   public void testOldDriver() throws Exception {
       HikariConfig config = newHikariConfig();
       config.setMinimumIdle(1);
       config.setMaximumPoolSize(1);
@@ -390,16 +376,14 @@ public class TestConnections
          try (Connection ignored = ds.getConnection()) {
             // close
          }
-      }
-      finally {
+      } finally {
          StubConnection.oldDriver = false;
          StubStatement.oldDriver = false;
       }
    }
 
    @Test
-   public void testSuspendResume() throws Exception
-   {
+   public void testSuspendResume() throws Exception {
       HikariConfig config = newHikariConfig();
       config.setMinimumIdle(3);
       config.setMaximumPoolSize(3);
@@ -418,8 +402,7 @@ public class TestConnections
             try {
                ds.getConnection();
                ds.getConnection();
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                fail();
             }
          });
@@ -441,8 +424,7 @@ public class TestConnections
    }
 
    @Test
-   public void testSuspendResumeWithThrow() throws Exception
-   {
+   public void testSuspendResumeWithThrow() throws Exception {
       HikariConfig config = newHikariConfig();
       config.setMinimumIdle(3);
       config.setMaximumPoolSize(3);
@@ -463,8 +445,7 @@ public class TestConnections
             try {
                ds.getConnection();
                ds.getConnection();
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                exception.set(e);
             }
          });
@@ -486,15 +467,13 @@ public class TestConnections
          try (Connection ignored = ds.getConnection()) {
             assertEquals(2, pool.getIdleConnections());
          }
-      }
-      finally {
+      } finally {
          System.getProperties().remove("com.zaxxer.hikari.throwIfSuspended");
       }
    }
 
    @Test
-   public void testInitializationFailure1()
-   {
+   public void testInitializationFailure1() {
       StubDataSource stubDataSource = new StubDataSource();
       stubDataSource.setThrowException(new SQLException("Connection refused"));
 
@@ -507,16 +486,14 @@ public class TestConnections
 
          try (Connection ignored = ds.getConnection()) {
             fail("Initialization should have failed");
-         }
-         catch (SQLException e) {
+         } catch (SQLException e) {
             // passed
          }
       }
    }
 
    @Test
-   public void testInitializationFailure2() throws SQLException
-   {
+   public void testInitializationFailure2() throws SQLException {
       StubDataSource stubDataSource = new StubDataSource();
       stubDataSource.setThrowException(new SQLException("Connection refused"));
 
@@ -528,20 +505,17 @@ public class TestConnections
       try (HikariDataSource ds = new HikariDataSource(config);
            Connection ignored = ds.getConnection()) {
          fail("Initialization should have failed");
-      }
-      catch (PoolInitializationException e) {
+      } catch (PoolInitializationException e) {
          // passed
       }
    }
 
    @Test
-   public void testInvalidConnectionTestQuery()
-   {
+   public void testInvalidConnectionTestQuery() {
       class BadConnection extends StubConnection {
          /** {@inheritDoc} */
          @Override
-         public Statement createStatement() throws SQLException
-         {
+         public Statement createStatement() throws SQLException {
             throw new SQLException("Simulated exception in createStatement()");
          }
       }
@@ -549,8 +523,7 @@ public class TestConnections
       StubDataSource stubDataSource = new StubDataSource() {
          /** {@inheritDoc} */
          @Override
-         public Connection getConnection()
-         {
+         public Connection getConnection() {
             return new BadConnection();
          }
       };
@@ -566,27 +539,24 @@ public class TestConnections
       try (HikariDataSource ds = new HikariDataSource(config)) {
          try (Connection ignored = ds.getConnection()) {
             fail("getConnection() should have failed");
+         } catch (SQLException e) {
+            assertSame("Simulated exception in createStatement()",
+                       e.getNextException().getMessage());
          }
-         catch (SQLException e) {
-            assertSame("Simulated exception in createStatement()", e.getNextException().getMessage());
-         }
-      }
-      catch (PoolInitializationException e) {
+      } catch (PoolInitializationException e) {
          assertSame("Simulated exception in createStatement()", e.getCause().getMessage());
       }
 
       config.setInitializationFailTimeout(0);
       try (HikariDataSource ignored = new HikariDataSource(config)) {
          fail("Initialization should have failed");
-      }
-      catch (PoolInitializationException e) {
+      } catch (PoolInitializationException e) {
          // passed
       }
    }
 
    @Test
-   public void testPopulationSlowAcquisition() throws InterruptedException, SQLException
-   {
+   public void testPopulationSlowAcquisition() throws InterruptedException, SQLException {
       HikariConfig config = newHikariConfig();
       config.setMaximumPoolSize(20);
       config.setConnectionTestQuery("VALUES 1");
@@ -621,16 +591,14 @@ public class TestConnections
 
          assertSame("Third total connections not as expected", 20, pool.getTotalConnections());
          assertSame("Third idle connections not as expected", 20, pool.getIdleConnections());
-      }
-      finally {
+      } finally {
          StubConnection.slowCreate = false;
       }
    }
 
    @Test
    @SuppressWarnings("EmptyTryBlock")
-   public void testMinimumIdleZero() throws SQLException
-   {
+   public void testMinimumIdleZero() throws SQLException {
       HikariConfig config = newHikariConfig();
       config.setMinimumIdle(0);
       config.setMaximumPoolSize(5);
@@ -641,8 +609,7 @@ public class TestConnections
       try (HikariDataSource ds = new HikariDataSource(config);
            Connection ignored = ds.getConnection()) {
          // passed
-      }
-      catch (SQLTransientConnectionException sqle) {
+      } catch (SQLTransientConnectionException sqle) {
          fail("Failed to obtain connection");
       }
    }

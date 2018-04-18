@@ -16,14 +16,10 @@
 
 package com.zaxxer.hikari.pool;
 
-import static com.zaxxer.hikari.pool.TestElf.getPool;
-import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
-import static com.zaxxer.hikari.util.ClockSource.currentTime;
-import static com.zaxxer.hikari.util.ClockSource.elapsedMillis;
-import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
-import static java.util.concurrent.TimeUnit.MINUTES;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+import com.zaxxer.hikari.util.UtilityElf;
+import org.junit.Before;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -33,11 +29,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.Before;
-
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
-import com.zaxxer.hikari.util.UtilityElf;
+import static com.zaxxer.hikari.pool.TestElf.getPool;
+import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
+import static com.zaxxer.hikari.util.ClockSource.currentTime;
+import static com.zaxxer.hikari.util.ClockSource.elapsedMillis;
+import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
+import static java.util.concurrent.TimeUnit.MINUTES;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * This test is meant to be run manually and interactively and was
@@ -45,11 +44,9 @@ import com.zaxxer.hikari.util.UtilityElf;
  *
  * @author Brett Wooldridge
  */
-public class PostgresTest
-{
+public class PostgresTest {
    //@Test
-   public void testCase1() throws Exception
-   {
+   public void testCase1() throws Exception {
       HikariConfig config = newHikariConfig();
       config.setMinimumIdle(3);
       config.setMaximumPoolSize(10);
@@ -67,9 +64,8 @@ public class PostgresTest
                public void run() {
                   try (Connection connection = ds.getConnection()) {
                      System.err.println("Obtained connection " + connection);
-                     quietlySleep(TimeUnit.SECONDS.toMillis((long)(10 + (Math.random() * 20))));
-                  }
-                  catch (SQLException e) {
+                     quietlySleep(TimeUnit.SECONDS.toMillis((long) (10 + (Math.random() * 20))));
+                  } catch (SQLException e) {
                      e.printStackTrace();
                   }
                }
@@ -77,14 +73,13 @@ public class PostgresTest
             t.setDaemon(true);
             t.start();
 
-            quietlySleep(TimeUnit.SECONDS.toMillis((long)((Math.random() * 20))));
+            quietlySleep(TimeUnit.SECONDS.toMillis((long) ((Math.random() * 20))));
          } while (elapsedMillis(start) < MINUTES.toMillis(15));
       }
    }
 
    //@Test
-   public void testCase2() throws Exception
-   {
+   public void testCase2() throws Exception {
       HikariConfig config = newHikariConfig();
       config.setMinimumIdle(3);
       config.setMaximumPoolSize(10);
@@ -109,13 +104,13 @@ public class PostgresTest
          try (Connection conn = ds.getConnection()) {
             System.err.println("\nOpps, got a connection.  Did you enable the firewall? " + conn);
             fail("Opps, got a connection.  Did you enable the firewall?");
-         }
-         catch (SQLException e)
-         {
-            assertTrue("Timeout less than expected " + elapsedMillis(start) + "ms", elapsedMillis(start) > 5000);
+         } catch (SQLException e) {
+            assertTrue("Timeout less than expected " + elapsedMillis(start) + "ms",
+                       elapsedMillis(start) > 5000);
          }
 
-         System.err.println("\nOk, so far so good.  Now, disable the firewall again.  Attempting connection in 5 seconds...");
+         System.err.println(
+            "\nOk, so far so good.  Now, disable the firewall again.  Attempting connection in 5 seconds...");
          quietlySleep(5000L);
          getPool(ds).logPoolState();
 
@@ -128,8 +123,7 @@ public class PostgresTest
    }
 
    //@Test
-   public void testCase3() throws Exception
-   {
+   public void testCase3() throws Exception {
       HikariConfig config = newHikariConfig();
       config.setMinimumIdle(3);
       config.setMaximumPoolSize(10);
@@ -145,8 +139,7 @@ public class PostgresTest
                public void run() {
                   try (Connection conn = ds.getConnection()) {
                      System.err.println("ERROR: should not have acquired connection.");
-                  }
-                  catch (SQLException e) {
+                  } catch (SQLException e) {
                      // expected
                   }
                }
@@ -163,8 +156,7 @@ public class PostgresTest
    }
 
    // @Test
-   public void testCase4() throws Exception
-   {
+   public void testCase4() throws Exception {
       HikariConfig config = newHikariConfig();
       config.setMinimumIdle(0);
       config.setMaximumPoolSize(15);
@@ -183,16 +175,18 @@ public class PostgresTest
          for (int i = 0; i < 20; i++) {
             threads.add(new Thread() {
                public void run() {
-                  UtilityElf.quietlySleep((long)(Math.random() * 2500L));
+                  UtilityElf.quietlySleep((long) (Math.random() * 2500L));
                   final long start = currentTime();
                   do {
-                     try (Connection conn = ds.getConnection(); Statement stmt = conn.createStatement()) {
-                        try (ResultSet rs = stmt.executeQuery("SELECT * FROM device WHERE device_id=0 ORDER BY device_id LIMIT 1 OFFSET 0")) {
+                     try (Connection conn = ds.getConnection();
+                          Statement stmt = conn.createStatement()) {
+                        try (ResultSet rs = stmt.executeQuery(
+                           "SELECT * FROM device WHERE device_id=0 ORDER BY device_id LIMIT 1 OFFSET 0")) {
                            rs.next();
                         }
-                        UtilityElf.quietlySleep(100L); //Math.max(50L, (long)(Math.random() * 250L)));
-                     }
-                     catch (SQLException e) {
+                        UtilityElf
+                           .quietlySleep(100L); //Math.max(50L, (long)(Math.random() * 250L)));
+                     } catch (SQLException e) {
                         e.printStackTrace();
                         // throw new RuntimeException(e);
                      }
@@ -203,26 +197,23 @@ public class PostgresTest
             });
          }
 
-//         threads.forEach(t -> t.start());
-//         threads.forEach(t -> { try { t.join(); } catch (InterruptedException e) {} });
+         //         threads.forEach(t -> t.start());
+         //         threads.forEach(t -> { try { t.join(); } catch (InterruptedException e) {} });
       }
    }
 
    @Before
-   public void before()
-   {
+   public void before() {
       System.err.println("\n");
    }
 
-   private void countdown(int seconds)
-   {
+   private void countdown(int seconds) {
       do {
          System.out.printf("Starting in %d seconds...\n", seconds);
          if (seconds > 10) {
             UtilityElf.quietlySleep(TimeUnit.SECONDS.toMillis(10));
             seconds -= 10;
-         }
-         else {
+         } else {
             UtilityElf.quietlySleep(TimeUnit.SECONDS.toMillis(1));
             seconds -= 1;
          }

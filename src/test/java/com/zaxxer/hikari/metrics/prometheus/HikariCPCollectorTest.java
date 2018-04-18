@@ -12,24 +12,22 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package com.zaxxer.hikari.metrics.prometheus;
+
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+import com.zaxxer.hikari.mocks.StubConnection;
+import io.prometheus.client.CollectorRegistry;
+import org.junit.Test;
+
+import java.sql.Connection;
 
 import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
 import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
-
-import java.sql.Connection;
-
-import org.junit.Test;
-
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
-import com.zaxxer.hikari.mocks.StubConnection;
-
-import io.prometheus.client.CollectorRegistry;
 
 public class HikariCPCollectorTest {
    @Test
@@ -47,8 +45,7 @@ public class HikariCPCollectorTest {
          assertThat(getValue("hikaricp_connections", "noConnection"), is(0.0));
          assertThat(getValue("hikaricp_max_connections", "noConnection"), is(10.0));
          assertThat(getValue("hikaricp_min_connections", "noConnection"), is(0.0));
-      }
-      finally {
+      } finally {
          StubConnection.slowCreate = false;
       }
    }
@@ -69,8 +66,7 @@ public class HikariCPCollectorTest {
          assertThat(getValue("hikaricp_connections", poolName), is(0.0));
          assertThat(getValue("hikaricp_max_connections", poolName), is(10.0));
          assertThat(getValue("hikaricp_min_connections", poolName), is(0.0));
-      }
-      finally {
+      } finally {
          StubConnection.slowCreate = false;
       }
    }
@@ -84,7 +80,7 @@ public class HikariCPCollectorTest {
 
       StubConnection.slowCreate = true;
       try (HikariDataSource ds = new HikariDataSource(config);
-         Connection connection1 = ds.getConnection()) {
+           Connection connection1 = ds.getConnection()) {
 
          quietlySleep(1000);
 
@@ -94,8 +90,7 @@ public class HikariCPCollectorTest {
          assertThat(getValue("hikaricp_connections", "connection1"), is(1.0));
          assertThat(getValue("hikaricp_max_connections", "connection1"), is(1.0));
          assertThat(getValue("hikaricp_min_connections", "connection1"), is(1.0));
-      }
-      finally {
+      } finally {
          StubConnection.slowCreate = false;
       }
    }
@@ -119,14 +114,13 @@ public class HikariCPCollectorTest {
          assertThat(getValue("hikaricp_connections", "connectionClosed"), is(1.0));
          assertThat(getValue("hikaricp_max_connections", "connectionClosed"), is(1.0));
          assertThat(getValue("hikaricp_min_connections", "connectionClosed"), is(1.0));
-      }
-      finally {
+      } finally {
          StubConnection.slowCreate = false;
       }
    }
 
    private double getValue(String name, String poolName) {
-      String[] labelNames = {"pool"};
+      String[] labelNames  = {"pool"};
       String[] labelValues = {poolName};
       return CollectorRegistry.defaultRegistry.getSampleValue(name, labelNames, labelValues);
    }

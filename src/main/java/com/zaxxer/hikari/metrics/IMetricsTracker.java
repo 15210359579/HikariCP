@@ -19,8 +19,7 @@ package com.zaxxer.hikari.metrics;
 /**
  * @author Brett Wooldridge
  */
-public interface IMetricsTracker extends AutoCloseable
-{
+public interface IMetricsTracker extends AutoCloseable {
    default void recordConnectionCreatedMillis(long connectionCreatedMillis) {}
 
    default void recordConnectionAcquiredNanos(final long elapsedAcquiredNanos) {}

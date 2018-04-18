@@ -27,8 +27,7 @@ import java.util.concurrent.Semaphore;
  *
  * @author Brett Wooldridge
  */
-public class SuspendResumeLock
-{
+public class SuspendResumeLock {
    public static final SuspendResumeLock FAUX_LOCK = new SuspendResumeLock(false) {
       @Override
       public void acquire() {}
@@ -43,46 +42,40 @@ public class SuspendResumeLock
       public void resume() {}
    };
 
-   private static final int MAX_PERMITS = 10000;
-   private final Semaphore acquisitionSemaphore;
+   private static final int       MAX_PERMITS = 10000;
+   private final        Semaphore acquisitionSemaphore;
 
    /**
     * Default constructor
     */
-   public SuspendResumeLock()
-   {
+   public SuspendResumeLock() {
       this(true);
    }
 
-   private SuspendResumeLock(final boolean createSemaphore)
-   {
+   private SuspendResumeLock(final boolean createSemaphore) {
       acquisitionSemaphore = (createSemaphore ? new Semaphore(MAX_PERMITS, true) : null);
    }
 
-   public void acquire() throws SQLException
-   {
+   public void acquire() throws SQLException {
       if (acquisitionSemaphore.tryAcquire()) {
          return;
-      }
-      else if (Boolean.getBoolean("com.zaxxer.hikari.throwIfSuspended")) {
-         throw new SQLTransientException("The pool is currently suspended and configured to throw exceptions upon acquisition");
+      } else if (Boolean.getBoolean("com.zaxxer.hikari.throwIfSuspended")) {
+         throw new SQLTransientException(
+            "The pool is currently suspended and configured to throw exceptions upon acquisition");
       }
 
       acquisitionSemaphore.acquireUninterruptibly();
    }
 
-   public void release()
-   {
+   public void release() {
       acquisitionSemaphore.release();
    }
 
-   public void suspend()
-   {
+   public void suspend() {
       acquisitionSemaphore.acquireUninterruptibly(MAX_PERMITS);
    }
 
-   public void resume()
-   {
+   public void resume() {
       acquisitionSemaphore.release(MAX_PERMITS);
    }
 }
